@@ -1,0 +1,15 @@
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5431/students
+    username: postgres
+    password: 123
+    hikari:
+      schema: student_schema
+#  jmx:
+#    enabled : true
+logging:
+  level:
+    root: debug
+server:
+  port: 8090
