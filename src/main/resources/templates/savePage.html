@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Форма для создания студента</title>
+</head>
+<body>
+    <h2>Форма для создания студента</h2>
+
+    <form th:action="@{/save}" method="post" enctype="multipart/form-data" th:object="${studentsDto}">
+        <div class="form-group">
+        <label >First Name</label>
+        <input type="text" class="form-control"
+                th:field="*{firstName}">
+    </div>
+    <div class="form-group">
+        <label >Last Name</label>
+        <input type="text" class="form-control"
+                th:field="*{lastName}">
+    </div>
+    <div class="form-group">
+        <label >Email Name</label>
+        <input type="text" class="form-control"
+                th:field="*{email}">
+    </div>
+    <div class="form-group">
+        <label >Image</label>
+        <input type="file" class="form-control-file"  name="image" accept="image/*"  th:field="*{image}">
+    </div>
+<!--        <div id="phoneNumbers">-->
+<!--            <div class="form-group phone-input">-->
+<!--                <label>Phone Number</label>-->
+<!--                <input type="text" class="form-control" name="studentPhonesList" th:field="*{studentPhonesList[0].phone}">-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        <button type="button" class="btn btn-secondary" onclick="addPhone()">Add Phone</button>-->
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+
+
+    <script>
+        function addPhone() {
+            const phoneNumbersDiv = document.getElementById('phoneNumbers');
+            const input = document.createElement('input');
+            console.log(input)
+            input.type = 'text';
+            input.name = 'studentPhonesList';
+            input.className = 'form-control';
+            input.placeholder = 'Phone Number';
+            phoneNumbersDiv.appendChild(input);
+        }
+    </script>
+
+</body>
+</html>

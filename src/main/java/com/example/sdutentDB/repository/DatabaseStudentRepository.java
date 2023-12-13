@@ -1,5 +1,6 @@
 package com.example.sdutentDB.repository;
 
+import com.example.sdutentDB.dto.StudentPhones;
 import com.example.sdutentDB.dto.Students;
 import com.example.sdutentDB.exception.StudentNotFoundException;
 import com.example.sdutentDB.repository.mapper.TaskRowMapper;
@@ -15,6 +16,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Field;
 import java.sql.Types;
 import java.util.*;
 
@@ -66,20 +68,28 @@ public class DatabaseStudentRepository implements StudentRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         template.update(sql, parameterSource, keyHolder);
         long id = Objects.requireNonNull(keyHolder.getKey()).longValue();
-        phoneRepository.save(students.getStudentPhonesList(), id);
+        if(students.getStudentPhonesList()!=null){
+            phoneRepository.save(students.getStudentPhonesList(), id);
+        }
+
         return students;
     }
 
     @Override
-    public Students update(Students students) {
-        Students existedStudent = findById(students.getId()).orElse(null);
+    public Students update(long studentID,Students students) {
+        Students existedStudent = findById(studentID).orElse(null);
         if(existedStudent!=null){
-            String sql = "update task set firstName=?, lastName=?, email=?, image=? where id = ?";
-            jdbcTemplate.update(sql,students.getFirstName(), students.getLastName(), students.getEmail(), students.getImage(), students.getId());
-            phoneRepository.update(students.getStudentPhonesList(), students.getId());
+            String sql = "update students set firstName=?, lastName=?, email=?, image=? where id = ?";
+            try {
+                students =checkForUpdate(students, existedStudent);
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+            jdbcTemplate.update(sql,students.getFirstName(), students.getLastName(), students.getEmail(), students.getImage(), studentID);
+
             return students;
         }
-        throw new StudentNotFoundException("Student for update not found! ID: "+students.getId());
+        throw new StudentNotFoundException("Student for update not found! ID: "+studentID);
     }
 
     @Override
@@ -87,5 +97,17 @@ public class DatabaseStudentRepository implements StudentRepository {
         String sql = "delete from students where id =?";
         phoneRepository.deleteById(id);
         jdbcTemplate.update(sql, id);
+    }
+    private Students checkForUpdate(Students students, Students existedStudents) throws IllegalAccessException {
+        var fields = students.getClass().getDeclaredFields();
+        for(Field field : fields){
+            field.setAccessible(true);
+            var value = field.get(students);
+            if(value==null||value.equals(0)){
+                var source = field.get(existedStudents);
+                field.set(students, source);
+            }
+        }
+        return students;
     }
 }

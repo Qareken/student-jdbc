@@ -1,30 +1,210 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Студенты</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-<h1>Список студентов</h1>
-<table>
-    <thead>
-    <tr>
-        <th>Student ID</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-        <th>Image</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="entry : ${map}">
-        <td th:text="${entry.key.id}"></td>
-        <td th:text="${entry.key.firstName}"></td>
-        <td th:text="${entry.key.lastName}"></td>
-        <td>
-            <!-- Отображение изображения из строки base64 -->
-            <img th:if="${entry.value != null}" th:src="'data:image/jpeg;base64,' + ${entry.value}" alt="Student Image" />
-        </td>
-    </tr>
-    </tbody>
-</table>
+<div class="container mt-5">
+
+    <!-- Кнопка Save -->
+    <button onclick="window.location.href='/save'" class="btn btn-primary">Create Student</button>
+
+    <h1>Список студентов</h1>
+    <table class="table">
+        <thead class="thead-dark">
+        <tr>
+            <th>Student ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Image</th>
+            <th>Phone List</th>
+            <th>Edit</th>
+            <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="entry : ${map}">
+            <td th:text="${entry.key.id}"></td>
+            <td th:text="${entry.key.firstName}"></td>
+            <td th:text="${entry.key.lastName}"></td>
+            <td th:text="${entry.key.email}"></td>
+            <td>
+                <!-- Отображение изображения из строки base64 -->
+                <img th:if="${entry.value != null}" th:src="'data:image/jpeg;base64,' + ${entry.value}"
+                     alt="Student Image" style="width: 100px; height: 100px;" />
+            </td>
+            <td>
+                <button class="btn btn-primary" data-action="showPhones" >Show Phones</button>
+                <table class="table table-bordered hidden" th:id="'phones_' + ${entry.key.id}">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Phone Numbers</th>
+                    </tr>
+                    </thead>
+                    <tbody th:each="phone : ${entry.key.studentPhonesList}">
+                    <tr>
+                        <td th:text="${phone.phone}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <!-- Кнопка Edit -->
+                <button class="btn btn-warning showEditModalBtn" th:data-student-id="${entry.key.id}">
+                    Edit
+                </button>
+
+                <!-- Форма для редактирования в модальном окне -->
+                <div class="modal fade" th:id="'editModal_' + ${entry.key.id}" tabindex="-1" role="dialog"
+                     aria-labelledby="editModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editModalLabel">Edit Student</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <!-- Edit form -->
+                                <form th:action="@{/edit/{studentID}(studentID=${entry.key.id})}" method="post" enctype="multipart/form-data" th:object="${studentsDto}">
+                                    <div class="form-group">
+                                        <label for="editFirstName_${entry.key.id}">First Name</label>
+                                        <input type="text" class="form-control"
+                                               id="editFirstName_${entry.key.id}" th:field="*{firstName}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editLastName_${entry.key.id}">Last Name</label>
+                                        <input type="text" class="form-control"
+                                               id="editLastName_${entry.key.id}" th:field="*{lastName}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editEmail_${entry.key.id}">Email Name</label>
+                                        <input type="text" class="form-control"
+                                               id="editEmail_${entry.key.id}" th:field="*{email}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="editImage_${entry.key.id}">Image</label>
+                                        <input type="file" class="form-control-file" id="editImage_${entry.key.id}" name="image" accept="image/*"  th:field="*{image}">
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <button  class="btn btn-danger deleteStudent" th:data-student-id="${entry.key.id}">Delete</button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+        crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/js/bootstrap.min.js"
+        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+        crossorigin="anonymous"></script>
+<script th:inline="javascript">
+    $(document).ready(function () {
+        /* Function to handle showing the edit modal */
+        function showEditModal(studentID) {
+            const modal = document.getElementById('editModal_' + studentID);
+            $(modal).modal('show'); // Show the modal
+        }
+
+        /* Function to handle showing/hiding phone list */
+        function showPhones(button) {
+            const table = button.nextElementSibling;
+            if (table.classList.contains('hidden')) {
+                table.classList.remove('hidden');
+            } else {
+                table.classList.add('hidden');
+            }
+        }
+
+        /* Attach click event listeners to the buttons */
+        $('.showPhonesBtn').on('click', function () {
+            showPhones(this);
+        });
+
+        $('.showEditModalBtn').on('click', function () {
+            const studentID = $(this).data('student-id');
+            showEditModal(studentID);
+        });
+    });
+</script><script th:inline="javascript">
+    /*<![CDATA[*/
+
+    $(document).ready(function () {
+
+        /* Function to handle showing/hiding phone list */
+        function showPhones(button) {
+            const table = button.nextElementSibling;
+            if (table.classList.contains('hidden')) {
+                table.classList.remove('hidden');
+            } else {
+                table.classList.add('hidden');
+            }
+        }
+
+        /* Attach click event listeners to the buttons */
+        $('button[data-action="showPhones"]').on('click', function () {
+            showPhones(this);
+        });
+
+        function showEditModal(studentID) {
+            const modal = document.getElementById('editModal_' + studentID);
+            $(modal).modal('show');
+        }
+
+        $('.showEditModalBtn').on('click', function () {
+            const studentID = $(this).data('student-id');
+            showEditModal(studentID);
+        });
+        $('.deleteStudent').on('click', function () {
+            const studentID = $(this).data('student-id');
+            deleteById(studentID);
+        });
+        function deleteById(studentID){
+
+            console.log("delete" , studentID)
+            fetch(`/delete/${studentID}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    window.location.href="/";
+                    // Handle success (e.g., update UI)
+                })
+                .catch(error => {
+                    // Handle error
+                    console.error('There was a problem with the fetch operation:', error);
+                });
+        }
+    });
+
+
+
+    /*]]>*/
+</script>
+
+
 </body>
 </html>

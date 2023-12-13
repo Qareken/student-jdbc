@@ -1,6 +1,8 @@
 package com.example.sdutentDB.repository;
 
 import com.example.sdutentDB.dto.StudentPhones;
+import com.example.sdutentDB.dto.Students;
+import com.example.sdutentDB.dto.StudentsDTO;
 import com.example.sdutentDB.repository.mapper.StudentWithPhonesExtractor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +10,10 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.*;
 
 @Repository
@@ -35,38 +39,39 @@ public class DatabasePhoneRepository implements StudentPhoneRepository {
 
     @Override
     public void save(List<StudentPhones> studentPhones, long studentId) {
-        studentPhones.forEach(phone->{
-            phone.setStudentId(studentId);
-        });
-        String sql = "insert into phones (student_id, phone) values(?,?)";
-        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
-            @Override
-            public void setValues(PreparedStatement ps, int i) throws SQLException {
-                StudentPhones phones = studentPhones.get(i);
-                ps.setLong(1, phones.getStudentId());
-                ps.setString(2, phones.getPhone());
-            }
+        if(!studentPhones.isEmpty()){
+            studentPhones.forEach(phone->{
+                phone.setStudentId(studentId);
+            });
+            String sql = "insert into phones (student_id, phone) values(?,?)";
+            jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(PreparedStatement ps, int i) throws SQLException {
+                    StudentPhones phones = studentPhones.get(i);
+                    ps.setLong(1, phones.getStudentId());
+                    ps.setString(2, phones.getPhone());
+                }
 
-            @Override
-            public int getBatchSize() {
-                return studentPhones.size();
-            }
-        });
+                @Override
+                public int getBatchSize() {
+                    return studentPhones.size();
+                }
+            });
+        }
+
     }
 
     @Override
     public void update(List<StudentPhones> studentPhones, long studentId) {
         List<StudentPhones> newPhoneList = new ArrayList<>();
-        String sql = "update phones set phone=? where id=?";
+        String sql = "update phones set phone=? where student_id=?";
         jdbcTemplate.update(sql, new BatchPreparedStatementSetter() {
-
-
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 StudentPhones phones = studentPhones.get(i);
                 if(phones.getId()!=null){
-                    ps.setString(1, phones.getPhone());
-                    ps.setLong(2, phones.getId());
+                    ps.setObject(1, phones.getPhone(), Types.VARCHAR);
+                    ps.setObject(2, studentId);
                 }else {
                     newPhoneList.add(phones);
                 }
@@ -77,7 +82,10 @@ public class DatabasePhoneRepository implements StudentPhoneRepository {
                 return studentPhones.size();
             }
         });
-        save(newPhoneList, studentId);
+        if(!newPhoneList.isEmpty()){
+            save(newPhoneList, studentId);
+        }
+
     }
 
     @Override
@@ -85,4 +93,5 @@ public class DatabasePhoneRepository implements StudentPhoneRepository {
         String query = "delete from phones where student_id= ? ";
         jdbcTemplate.update(query,studentID);
     }
+
 }

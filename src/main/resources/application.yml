@@ -6,6 +6,9 @@ spring:
     password: 123
     hikari:
       schema: student_schema
+  servlet:
+    multipart:
+      enabled: true
 #  jmx:
 #    enabled : true
 logging:
